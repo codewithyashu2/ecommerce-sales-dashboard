@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>E-Commerce Sales Intelligence | Portfolio Project</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg-base: #0a0e1a;
+    --bg-surface: #111827;
+    --bg-card: #151d2e;
+    --bg-hover: #1c2740;
+    --accent-gold: #f5c842;
+    --accent-amber: #f59e0b;
+    --accent-teal: #2dd4bf;
+    --accent-rose: #fb7185;
+    --accent-blue: #60a5fa;
+    --accent-purple: #a78bfa;
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted: #4b5e7a;
+    --border: rgba(255,255,255,0.06);
+    --border-accent: rgba(245,200,66,0.3);
+    --shadow: 0 8px 32px rgba(0,0,0,0.4);
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    background: var(--bg-base);
+    color: var(--text-primary);
+    font-family: 'Outfit', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(245,200,66,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(245,200,66,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 0 28px 60px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 36px 0 28px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 36px;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .header-left {}
+  .header-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(245,200,66,0.1);
+    border: 1px solid var(--border-accent);
+    color: var(--accent-gold);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border-radius: 100px;
+    margin-bottom: 14px;
+  }
+  .header-badge::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: var(--accent-gold);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity:1; transform:scale(1); }
+    50% { opacity:0.4; transform:scale(0.8); }
+  }
+
+  h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(28px, 4vw, 48px);
+    font-weight: 400;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+  }
+  h1 em {
+    font-style: italic;
+    color: var(--accent-gold);
+  }
+
+  .header-sub {
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 300;
+    margin-top: 8px;
+    max-width: 480px;
+    line-height: 1.6;
+  }
+
+  .header-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+  }
+
+  .live-indicator {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+
+  /* ─── FILTERS ─── */
+  .filters {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+  }
+  .filter-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+    font-family: 'IBM Plex Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-right: 4px;
+  }
+  .filter-btn {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: 100px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .filter-btn:hover { border-color: rgba(245,200,66,0.4); color: var(--accent-gold); }
+  .filter-btn.active {
+    background: rgba(245,200,66,0.12);
+    border-color: var(--accent-gold);
+    color: var(--accent-gold);
+  }
+
+  /* ─── KPI CARDS ─── */
+  .kpis {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .kpi-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s, border-color 0.2s;
+    cursor: default;
+    animation: fadeUp 0.5s ease both;
+  }
+  .kpi-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(245,200,66,0.2);
+  }
+  .kpi-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    border-radius: var(--radius) var(--radius) 0 0;
+  }
+  .kpi-card:nth-child(1)::after { background: var(--accent-gold); }
+  .kpi-card:nth-child(2)::after { background: var(--accent-teal); }
+  .kpi-card:nth-child(3)::after { background: var(--accent-rose); }
+  .kpi-card:nth-child(4)::after { background: var(--accent-blue); }
+  .kpi-card:nth-child(1) { animation-delay: 0.05s; }
+  .kpi-card:nth-child(2) { animation-delay: 0.10s; }
+  .kpi-card:nth-child(3) { animation-delay: 0.15s; }
+  .kpi-card:nth-child(4) { animation-delay: 0.20s; }
+
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(20px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  .kpi-icon {
+    font-size: 20px;
+    margin-bottom: 16px;
+    display: block;
+  }
+  .kpi-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-family: 'IBM Plex Mono', monospace;
+    margin-bottom: 6px;
+  }
+  .kpi-value {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: clamp(22px, 3vw, 32px);
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1;
+    margin-bottom: 10px;
+  }
+  .kpi-delta {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .kpi-delta.up { color: var(--accent-teal); }
+  .kpi-delta.down { color: var(--accent-rose); }
+  .kpi-delta-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 400;
+    margin-left: 4px;
+  }
+
+  /* ─── CHARTS GRID ─── */
+  .charts-row {
+    display: grid;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .charts-row-1 { grid-template-columns: 2fr 1fr; }
+  .charts-row-2 { grid-template-columns: 1fr 1fr 1fr; }
+
+  .chart-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    animation: fadeUp 0.5s ease both;
+    transition: border-color 0.2s;
+  }
+  .chart-card:hover { border-color: rgba(245,200,66,0.15); }
+
+  .card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    gap: 10px;
+  }
+  .card-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+    font-weight: 400;
+    color: var(--text-primary);
+    line-height: 1.2;
+  }
+  .card-subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 3px;
+    font-weight: 300;
+  }
+  .card-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 100px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .tag-gold { background: rgba(245,200,66,0.1); color: var(--accent-gold); border: 1px solid rgba(245,200,66,0.2); }
+  .tag-teal { background: rgba(45,212,191,0.1); color: var(--accent-teal); border: 1px solid rgba(45,212,191,0.2); }
+  .tag-rose { background: rgba(251,113,133,0.1); color: var(--accent-rose); border: 1px solid rgba(251,113,133,0.2); }
+  .tag-blue { background: rgba(96,165,250,0.1); color: var(--accent-blue); border: 1px solid rgba(96,165,250,0.2); }
+  .tag-purple { background: rgba(167,139,250,0.1); color: var(--accent-purple); border: 1px solid rgba(167,139,250,0.2); }
+
+  canvas { max-width: 100%; }
+
+  /* ─── TABLE CARD ─── */
+  .table-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 24px;
+    animation: fadeUp 0.6s ease both;
+    animation-delay: 0.3s;
+  }
+  .table-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    text-align: left;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    padding: 0 16px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  thead th:first-child { padding-left: 0; }
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+    cursor: default;
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--bg-hover); }
+  tbody td {
+    padding: 14px 16px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    vertical-align: middle;
+  }
+  tbody td:first-child { padding-left: 0; }
+  .td-product {
+    color: var(--text-primary) !important;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .td-rank {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    width: 24px;
+    text-align: center;
+    background: var(--bg-surface);
+    border-radius: 6px;
+    padding: 3px 0;
+    flex-shrink: 0;
+  }
+  .td-mono {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+  }
+  .progress-bar-outer {
+    background: var(--bg-surface);
+    border-radius: 100px;
+    height: 5px;
+    width: 100px;
+    overflow: hidden;
+  }
+  .progress-bar-inner {
+    height: 100%;
+    border-radius: 100px;
+    background: linear-gradient(90deg, var(--accent-gold), var(--accent-amber));
+  }
+  .status-badge {
+    font-size: 10px;
+    font-weight: 600;
+    font-family: 'IBM Plex Mono', monospace;
+    padding: 3px 10px;
+    border-radius: 100px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .status-up { background: rgba(45,212,191,0.12); color: var(--accent-teal); }
+  .status-dn { background: rgba(251,113,133,0.12); color: var(--accent-rose); }
+
+  /* ─── INSIGHT CARDS ─── */
+  .insights-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .insight-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    animation: fadeUp 0.5s ease both;
+    animation-delay: 0.4s;
+  }
+  .insight-icon { font-size: 22px; margin-bottom: 10px; }
+  .insight-title {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    font-family: 'IBM Plex Mono', monospace;
+    margin-bottom: 6px;
+  }
+  .insight-text {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    font-weight: 300;
+  }
+  .insight-text strong {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  /* ─── FOOTER ─── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding-top: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .footer-left { font-size: 13px; color: var(--text-muted); }
+  .footer-left strong { color: var(--text-secondary); }
+  .footer-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+  .footer-tag {
+    font-size: 11px;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 4px 12px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  @media (max-width: 1100px) {
+    .kpis { grid-template-columns: repeat(2, 1fr); }
+    .charts-row-1 { grid-template-columns: 1fr; }
+    .charts-row-2 { grid-template-columns: 1fr 1fr; }
+    .insights-row { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 680px) {
+    .kpis { grid-template-columns: 1fr 1fr; }
+    .charts-row-2 { grid-template-columns: 1fr; }
+    .insights-row { grid-template-columns: 1fr; }
+    .header-right { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-left">
+      <div class="header-badge">Portfolio Project · Data Analytics</div>
+      <h1>E-Commerce Sales <em>Intelligence</em></h1>
+      <p class="header-sub">End-to-end analysis of 12-month sales data across categories, channels, and regions — built with Python, SQL & Power BI.</p>
+    </div>
+    <div class="header-right">
+      <div class="live-indicator" id="clock">Loading...</div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:var(--text-muted);font-family:'IBM Plex Mono',monospace;">DATASET</div>
+        <div style="font-size:13px;color:var(--text-secondary);font-family:'IBM Plex Mono',monospace;">50,000 orders · FY 2024</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- FILTERS -->
+  <div class="filters">
+    <span class="filter-label">Period</span>
+    <button class="filter-btn" onclick="setFilter('q1',this)">Q1</button>
+    <button class="filter-btn" onclick="setFilter('q2',this)">Q2</button>
+    <button class="filter-btn" onclick="setFilter('q3',this)">Q3</button>
+    <button class="filter-btn" onclick="setFilter('q4',this)">Q4</button>
+    <button class="filter-btn active" onclick="setFilter('all',this)">Full Year</button>
+    <span class="filter-label" style="margin-left:16px;">Region</span>
+    <button class="filter-btn active" onclick="setRegion('all',this)">All</button>
+    <button class="filter-btn" onclick="setRegion('north',this)">North</button>
+    <button class="filter-btn" onclick="setRegion('south',this)">South</button>
+    <button class="filter-btn" onclick="setRegion('west',this)">West</button>
+  </div>
+
+  <!-- KPI CARDS -->
+  <div class="kpis">
+    <div class="kpi-card">
+      <span class="kpi-icon">💰</span>
+      <div class="kpi-label">Total Revenue</div>
+      <div class="kpi-value" id="kpi-rev">$4.82M</div>
+      <span class="kpi-delta up">↑ 23.4%<span class="kpi-delta-label">vs last year</span></span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-icon">📦</span>
+      <div class="kpi-label">Total Orders</div>
+      <div class="kpi-value" id="kpi-ord">50,241</div>
+      <span class="kpi-delta up">↑ 18.1%<span class="kpi-delta-label">vs last year</span></span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-icon">🧾</span>
+      <div class="kpi-label">Avg Order Value</div>
+      <div class="kpi-value" id="kpi-aov">$95.98</div>
+      <span class="kpi-delta up">↑ 4.5%<span class="kpi-delta-label">vs last year</span></span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-icon">🔄</span>
+      <div class="kpi-label">Return Rate</div>
+      <div class="kpi-value" id="kpi-ret">8.3%</div>
+      <span class="kpi-delta down">↑ 0.7pp<span class="kpi-delta-label">needs attention</span></span>
+    </div>
+  </div>
+
+  <!-- ROW 1: Revenue Trend + Donut -->
+  <div class="charts-row charts-row-1" style="animation-delay:0.2s">
+    <div class="chart-card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Monthly Revenue & Order Trend</div>
+          <div class="card-subtitle">Revenue (bars) vs. Order volume (line) — FY 2024</div>
+        </div>
+        <span class="card-tag tag-gold">TREND</span>
+      </div>
+      <canvas id="revenueChart" height="110"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Sales by Channel</div>
+          <div class="card-subtitle">Revenue share across acquisition channels</div>
+        </div>
+        <span class="card-tag tag-teal">CHANNEL</span>
+      </div>
+      <canvas id="channelChart" height="210"></canvas>
+      <div id="channel-legend" style="margin-top:16px;display:flex;flex-direction:column;gap:8px;"></div>
+    </div>
+  </div>
+
+  <!-- ROW 2: Category Bar + Region + Cohort -->
+  <div class="charts-row charts-row-2" style="animation-delay:0.25s">
+    <div class="chart-card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Revenue by Category</div>
+          <div class="card-subtitle">Gross revenue per product category</div>
+        </div>
+        <span class="card-tag tag-rose">CATEGORY</span>
+      </div>
+      <canvas id="categoryChart" height="200"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Regional Performance</div>
+          <div class="card-subtitle">Revenue by geography</div>
+        </div>
+        <span class="card-tag tag-blue">REGION</span>
+      </div>
+      <canvas id="regionChart" height="200"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Customer Retention</div>
+          <div class="card-subtitle">Cohort analysis — repeat purchase rate</div>
+        </div>
+        <span class="card-tag tag-purple">COHORT</span>
+      </div>
+      <canvas id="cohortChart" height="200"></canvas>
+    </div>
+  </div>
+
+  <!-- TOP PRODUCTS TABLE -->
+  <div class="table-card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Top Performing Products</div>
+        <div class="card-subtitle">Ranked by revenue — with growth vs prior year and return rate</div>
+      </div>
+      <span class="card-tag tag-gold">SQL QUERY</span>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Product</th>
+            <th>Category</th>
+            <th>Revenue</th>
+            <th>Orders</th>
+            <th>AOV</th>
+            <th>Share</th>
+            <th>YoY</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="productTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- INSIGHTS -->
+  <div class="insights-row">
+    <div class="insight-card">
+      <div class="insight-icon">📈</div>
+      <div class="insight-title">Key Finding</div>
+      <div class="insight-text"><strong>Electronics drove 38% of total revenue</strong> despite being only 22% of order volume — indicating a premium pricing opportunity and strong AOV in this segment.</div>
+    </div>
+    <div class="insight-card">
+      <div class="insight-icon">⚠️</div>
+      <div class="insight-title">Action Required</div>
+      <div class="insight-text">Return rates in <strong>Apparel (14.2%)</strong> are nearly double the average. A SQL cohort analysis revealed fit-related returns peak in months 2–3 post-purchase.</div>
+    </div>
+    <div class="insight-card">
+      <div class="insight-icon">🎯</div>
+      <div class="insight-title">Opportunity</div>
+      <div class="insight-text"><strong>Organic Search (31% share)</strong> converts 2.4× better than paid social, yet receives 40% less budget. Reallocating spend could yield $340K incremental revenue.</div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-left">
+      Built by <strong>Your Name</strong> · Tools: <strong>Python (pandas, matplotlib)</strong> · <strong>SQL (PostgreSQL)</strong> · <strong>Power BI</strong>
+    </div>
+    <div class="footer-tags">
+      <span class="footer-tag">#DataAnalytics</span>
+      <span class="footer-tag">#Python</span>
+      <span class="footer-tag">#SQL</span>
+      <span class="footer-tag">#DataViz</span>
+      <span class="footer-tag">#Portfolio</span>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+// ─── DATA ───
+const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+const data = {
+  all: {
+    revenue: [310,285,342,398,420,385,450,510,488,520,545,670],
+    orders:  [3100,2900,3400,4000,4200,3850,4500,5100,4900,5200,5500,6800],
+    kpi: { rev:'$4.82M', ord:'50,241', aov:'$95.98', ret:'8.3%' }
+  },
+  q1: {
+    revenue: [310,285,342,0,0,0,0,0,0,0,0,0],
+    orders:  [3100,2900,3400,0,0,0,0,0,0,0,0,0],
+    kpi: { rev:'$937K', ord:'9,400', aov:'$99.7', ret:'7.9%' }
+  },
+  q2: {
+    revenue: [0,0,0,398,420,385,0,0,0,0,0,0],
+    orders:  [0,0,0,4000,4200,3850,0,0,0,0,0,0],
+    kpi: { rev:'$1.20M', ord:'12,050', aov:'$99.5', ret:'8.1%' }
+  },
+  q3: {
+    revenue: [0,0,0,0,0,0,450,510,488,0,0,0],
+    orders:  [0,0,0,0,0,0,4500,5100,4900,0,0,0],
+    kpi: { rev:'$1.45M', ord:'14,500', aov:'$100.0', ret:'8.4%' }
+  },
+  q4: {
+    revenue: [0,0,0,0,0,0,0,0,0,520,545,670],
+    orders:  [0,0,0,0,0,0,0,0,0,5200,5500,6800],
+    kpi: { rev:'$1.74M', ord:'17,500', aov:'$99.4', ret:'8.7%' }
+  }
+};
+
+const categoryData = {
+  labels: ['Electronics','Apparel','Home & Garden','Sports','Beauty','Books'],
+  values: [1830,980,750,620,450,190],
+  colors: ['#f5c842','#2dd4bf','#fb7185','#60a5fa','#a78bfa','#fdba74']
+};
+
+const channelData = {
+  labels: ['Organic Search','Direct','Email','Paid Social','Affiliate','Referral'],
+  values: [31,24,18,14,8,5],
+  colors: ['#f5c842','#2dd4bf','#60a5fa','#fb7185','#a78bfa','#fdba74']
+};
+
+const regionData = {
+  labels: ['West','Northeast','South','Midwest','International'],
+  values: [1450,1280,980,720,390],
+  colors: ['#f5c842','#2dd4bf','#fb7185','#60a5fa','#a78bfa']
+};
+
+const cohortData = {
+  labels: ['Month 1','Month 2','Month 3','Month 4','Month 5','Month 6'],
+  datasets: [
+    { label:'Jan Cohort', data:[100,62,48,40,36,33], color:'#f5c842' },
+    { label:'Apr Cohort', data:[100,65,51,43,39,null], color:'#2dd4bf' },
+    { label:'Jul Cohort', data:[100,68,54,46,null,null], color:'#60a5fa' },
+    { label:'Oct Cohort', data:[100,71,null,null,null,null], color:'#a78bfa' }
+  ]
+};
+
+const products = [
+  { name:'iPhone 15 Pro Case', cat:'Electronics', rev:248000, orders:4120, pct:83, yoy:'+31.2%', up:true },
+  { name:'Wireless Earbuds Pro', cat:'Electronics', rev:196000, orders:2800, pct:66, yoy:'+18.7%', up:true },
+  { name:'Yoga Mat Premium', cat:'Sports', rev:142000, orders:5680, pct:48, yoy:'+44.1%', up:true },
+  { name:'Smart Water Bottle', cat:'Home & Garden', rev:118000, orders:3940, pct:40, yoy:'+12.3%', up:true },
+  { name:'Serum Vitamin C', cat:'Beauty', rev:98000, orders:4900, pct:33, yoy:'-5.2%', up:false },
+  { name:'Compression Leggings', cat:'Apparel', rev:87000, orders:2900, pct:29, yoy:'+8.9%', up:true },
+  { name:'Data Analytics Book', cat:'Books', rev:64000, orders:4267, pct:22, yoy:'+61.4%', up:true },
+];
+
+// ─── CHART DEFAULTS ───
+Chart.defaults.color = '#4b5e7a';
+Chart.defaults.font.family = "'IBM Plex Mono', monospace";
+Chart.defaults.font.size = 10;
+
+const gridLine = { color: 'rgba(255,255,255,0.04)', drawBorder: false };
+const noLegend = { display: false };
+
+// ─── REVENUE CHART ───
+let revenueChart = new Chart(document.getElementById('revenueChart'), {
+  type: 'bar',
+  data: {
+    labels: months,
+    datasets: [
+      {
+        label: 'Revenue ($K)',
+        data: data.all.revenue,
+        backgroundColor: 'rgba(245,200,66,0.7)',
+        borderRadius: 6,
+        borderSkipped: false,
+        order: 2,
+        yAxisID: 'y'
+      },
+      {
+        label: 'Orders',
+        data: data.all.orders,
+        type: 'line',
+        borderColor: '#2dd4bf',
+        backgroundColor: 'rgba(45,212,191,0.08)',
+        tension: 0.4,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        pointBackgroundColor: '#2dd4bf',
+        borderWidth: 2,
+        fill: true,
+        order: 1,
+        yAxisID: 'y1'
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: {
+        display: true,
+        labels: { color: '#94a3b8', boxWidth: 12, padding: 16, font: { size: 11 } }
+      },
+      tooltip: {
+        backgroundColor: '#151d2e',
+        borderColor: 'rgba(245,200,66,0.3)',
+        borderWidth: 1,
+        titleColor: '#f1f5f9',
+        bodyColor: '#94a3b8',
+        padding: 12
+      }
+    },
+    scales: {
+      x: { grid: gridLine, ticks: { color: '#4b5e7a' } },
+      y: {
+        position: 'left',
+        grid: gridLine,
+        ticks: { color: '#4b5e7a', callback: v => `$${v}K` }
+      },
+      y1: {
+        position: 'right',
+        grid: { display: false },
+        ticks: { color: '#2dd4bf', callback: v => v >= 1000 ? `${(v/1000).toFixed(1)}K` : v }
+      }
+    }
+  }
+});
+
+// ─── CHANNEL DONUT ───
+const channelCtx = document.getElementById('channelChart');
+new Chart(channelCtx, {
+  type: 'doughnut',
+  data: {
+    labels: channelData.labels,
+    datasets: [{ data: channelData.values, backgroundColor: channelData.colors, borderWidth: 0, hoverOffset: 8 }]
+  },
+  options: {
+    cutout: '70%',
+    plugins: {
+      legend: noLegend,
+      tooltip: {
+        backgroundColor: '#151d2e',
+        borderColor: 'rgba(245,200,66,0.3)',
+        borderWidth: 1,
+        titleColor: '#f1f5f9',
+        bodyColor: '#94a3b8',
+        callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed}%` }
+      }
+    }
+  }
+});
+// Custom legend
+const leg = document.getElementById('channel-legend');
+channelData.labels.forEach((l, i) => {
+  leg.innerHTML += `
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="width:8px;height:8px;border-radius:50%;background:${channelData.colors[i]};flex-shrink:0"></span>
+        <span style="font-size:12px;color:var(--text-secondary)">${l}</span>
+      </div>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text-primary);font-weight:600">${channelData.values[i]}%</span>
+    </div>`;
+});
+
+// ─── CATEGORY BAR ───
+new Chart(document.getElementById('categoryChart'), {
+  type: 'bar',
+  data: {
+    labels: categoryData.labels,
+    datasets: [{
+      data: categoryData.values,
+      backgroundColor: categoryData.colors,
+      borderRadius: 6,
+      borderSkipped: false
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    plugins: { legend: noLegend,
+      tooltip: {
+        backgroundColor: '#151d2e', borderColor: 'rgba(245,200,66,0.3)', borderWidth: 1,
+        titleColor: '#f1f5f9', bodyColor: '#94a3b8',
+        callbacks: { label: ctx => ` $${(ctx.parsed.x/1000).toFixed(0)}K` }
+      }
+    },
+    scales: {
+      x: { grid: gridLine, ticks: { color: '#4b5e7a', callback: v => `$${v/1000}K` } },
+      y: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+    }
+  }
+});
+
+// ─── REGION POLAR ───
+new Chart(document.getElementById('regionChart'), {
+  type: 'polarArea',
+  data: {
+    labels: regionData.labels,
+    datasets: [{
+      data: regionData.values,
+      backgroundColor: regionData.colors.map(c => c + 'bb'),
+      borderColor: regionData.colors,
+      borderWidth: 1
+    }]
+  },
+  options: {
+    plugins: {
+      legend: { display: true, position: 'bottom', labels: { color: '#94a3b8', boxWidth: 10, padding: 10, font: { size: 10 } } },
+      tooltip: {
+        backgroundColor: '#151d2e', borderColor: 'rgba(245,200,66,0.3)', borderWidth: 1,
+        titleColor: '#f1f5f9', bodyColor: '#94a3b8',
+        callbacks: { label: ctx => ` $${(ctx.parsed.r/1000).toFixed(0)}K` }
+      }
+    },
+    scales: { r: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { display: false } } }
+  }
+});
+
+// ─── COHORT LINE ───
+new Chart(document.getElementById('cohortChart'), {
+  type: 'line',
+  data: {
+    labels: cohortData.labels,
+    datasets: cohortData.datasets.map(d => ({
+      label: d.label,
+      data: d.data,
+      borderColor: d.color,
+      backgroundColor: 'transparent',
+      tension: 0.4,
+      pointRadius: 4,
+      pointBackgroundColor: d.color,
+      borderWidth: 2,
+      spanGaps: false
+    }))
+  },
+  options: {
+    plugins: {
+      legend: { display: true, position: 'bottom', labels: { color: '#94a3b8', boxWidth: 10, padding: 10, font: { size: 10 } } },
+      tooltip: {
+        backgroundColor: '#151d2e', borderColor: 'rgba(245,200,66,0.3)', borderWidth: 1,
+        titleColor: '#f1f5f9', bodyColor: '#94a3b8',
+        callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y}%` }
+      }
+    },
+    scales: {
+      x: { grid: gridLine, ticks: { color: '#4b5e7a' } },
+      y: {
+        grid: gridLine,
+        ticks: { color: '#4b5e7a', callback: v => `${v}%` },
+        min: 0, max: 100
+      }
+    }
+  }
+});
+
+// ─── PRODUCT TABLE ───
+function renderTable() {
+  const tbody = document.getElementById('productTable');
+  tbody.innerHTML = '';
+  products.forEach((p, i) => {
+    tbody.innerHTML += `
+      <tr>
+        <td><div class="td-mono" style="color:var(--text-muted)">${i+1}</div></td>
+        <td><div class="td-product"><span class="td-rank">${i+1}</span>${p.name}</div></td>
+        <td><span class="td-mono" style="color:var(--text-muted)">${p.cat}</span></td>
+        <td><span class="td-mono">$${(p.rev/1000).toFixed(0)}K</span></td>
+        <td><span class="td-mono">${p.orders.toLocaleString()}</span></td>
+        <td><span class="td-mono">$${(p.rev/p.orders).toFixed(0)}</span></td>
+        <td>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="progress-bar-outer">
+              <div class="progress-bar-inner" style="width:${p.pct}%"></div>
+            </div>
+            <span class="td-mono" style="font-size:10px;color:var(--text-muted)">${p.pct}%</span>
+          </div>
+        </td>
+        <td><span class="td-mono ${p.up ? 'status-up':'status-dn'}" style="font-size:11px">${p.yoy}</span></td>
+        <td><span class="status-badge ${p.up ? 'status-up':'status-dn'}">${p.up?'Growing':'Watch'}</span></td>
+      </tr>`;
+  });
+}
+renderTable();
+
+// ─── FILTERS ───
+let currentFilter = 'all';
+
+function setFilter(period, btn) {
+  currentFilter = period;
+  document.querySelectorAll('.filters .filter-btn').forEach((b, i) => {
+    if (i < 5) b.classList.remove('active');
+  });
+  btn.classList.add('active');
+
+  const d = data[period];
+  revenueChart.data.datasets[0].data = d.revenue;
+  revenueChart.data.datasets[1].data = d.orders;
+  revenueChart.update();
+
+  document.getElementById('kpi-rev').textContent = d.kpi.rev;
+  document.getElementById('kpi-ord').textContent = d.kpi.ord;
+  document.getElementById('kpi-aov').textContent = d.kpi.aov;
+  document.getElementById('kpi-ret').textContent = d.kpi.ret;
+}
+
+function setRegion(r, btn) {
+  const regionBtns = document.querySelectorAll('.filters .filter-btn');
+  regionBtns.forEach((b, i) => { if (i >= 5) b.classList.remove('active'); });
+  btn.classList.add('active');
+}
+
+// ─── CLOCK ───
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent =
+    now.toLocaleTimeString('en-US', { hour12: false }) + ' · Live Dashboard';
+}
+updateClock();
+setInterval(updateClock, 1000);
+</script>
+</body>
+</html>
